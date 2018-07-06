@@ -1,5 +1,6 @@
 var Users = require('./../routes/users').Users;
 var assert = require('assert');
+var fetch = require('node-fetch');
 
 describe('Users', function() {
 
@@ -46,9 +47,44 @@ describe('Users', function() {
         users2.addQuery('1');
 
         assert.strictEqual(users2.listQueries['1'].value, 1) 
+    });
+
+    it('should block excess queries', function() {
+
+        var users3 = new Users(1, 50);
+        var first = users3.addQuery('1');
+        var second = users3.addQuery('1');
+        assert.strictEqual(first, true, 'should not block');
+        assert.strictEqual(second, false, 'should block');
     })
 
-    
+    var emailRequest = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            email: process.env.EMAIL_TEST,
+            subject: '[TEST] TEST',
+            message: 'Well this is just a simple email\nTo say what you done'
+        })
+    }
+
+    it('should send me an email', function(done) {
+
+        this.timeout(4000);
+
+        fetch('http://localhost:' + process.env.PORT + '/users/contact', emailRequest)
+        .then(function(res) {
+            assert.strictEqual(res.status, 200, 'status number');
+
+            done();
+        })
+        .catch(function(err) {
+            done(err);
+        })
+    })
+       
     
 
 })

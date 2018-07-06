@@ -1,5 +1,5 @@
 var express = require('express');
-var jwt = require('jsonwebtoken');
+var nodemailer = require('nodemailer');
 var router = express.Router();
 
 /**
@@ -35,6 +35,8 @@ function AutoCounter(delay) {
     
   }
 
+  
+
   this.updateValue();
 }
 
@@ -55,12 +57,17 @@ function Users(maxQueries, refreshRate) {
   /**
    * Adds one query from the following IP address
    * @param {string} ip 
+   * @return {boolean} has the value been incremented ?
    */
   this.addQuery = function(ip) {
-    if (!this.listQueries[ip]) return this.listQueries[ip] = new AutoCounter(this.refreshRate);
-    if (this.listQueries[ip].value >= this.maxQueries) return;
-    
+    if (!this.listQueries[ip]) {
+      this.listQueries[ip] = new AutoCounter(this.refreshRate);
+      return true;
+    } 
+    if (this.listQueries[ip].value >= this.maxQueries) return false;
+
     this.listQueries[ip].inc();
+    return true;
   }
 
   /**
@@ -86,12 +93,68 @@ function Users(maxQueries, refreshRate) {
 
   }
 
+  this._transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.EMAIL_PASSWORD
+    }
+  });
+
+  /**
+   * @callback Users~callbackEmail
+   * @param {?Object} err
+   */
+
+  /**
+   * 
+   * @param {string} ip author IP
+   * @param {string} author author email address
+   * @param {string} subject 
+   * @param {string} message 
+   * @param {Users~callbackEmail} next
+   */
+  this.sendEmail = function(ip, author, subject, message, next) {
+
+    var canSendEmail = this.addQuery(ip);
+
+    if (!canSendEmail) return next(Error('Too many inquiries'));
+
+    var mailOptions = {
+      from: author,
+      to: process.env.EMAIL,
+      subject: subject,
+      text: message + ' answer : ' + author,
+    }
+    this._transporter.sendMail(mailOptions, function(err, info) {
+      next(err);
+    });
+  }
+
   this.updateQueries();
 };
 
-router.get('/getToken', function(req, res, next) {
+var users = new Users(5, 24 * 60 * 50 * 1000);
+
+router.post('/contact', function(req, res) {
   var ipAddress = req.ip;
-  res.send(ipAddress);
+
+  console.log('body contact', req.body);
+  
+  var email = req.body.email;
+  var subject = req.body.subject;
+  var message = req.body.message;
+
+  console.log(email, subject, message);
+
+  users.sendEmail(ipAddress, email, subject, message, function(err) {
+    if (err === 'Too many inquiries') return res.status(429).send('Too many inquiries, try again in 24h').end();
+    if (err) return res.status(500).send('Issue with email send');
+
+    return res.end();
+  })
+  
+
 });
 
 module.exports = {
