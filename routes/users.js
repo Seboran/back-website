@@ -1,6 +1,8 @@
 var express = require('express');
 var nodemailer = require('nodemailer');
+
 var router = express.Router();
+
 
 /**
  * Counter that drops by one every delay seconds and destroys itself
@@ -139,6 +141,7 @@ var users = new Users(5, 24 * 60 * 50 * 1000);
 router.post('/contact', function(req, res) {
   var ipAddress = req.ip;
 
+  
   console.log('body contact', req.body);
   
   var email = req.body.email;
