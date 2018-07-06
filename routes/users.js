@@ -1,5 +1,6 @@
 var express = require('express');
 var nodemailer = require('nodemailer');
+var mailgun = require('mailgun-js')({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN});
 
 var router = express.Router();
 
@@ -95,13 +96,6 @@ function Users(maxQueries, refreshRate) {
 
   }
 
-  this._transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL,
-      pass: process.env.EMAIL_PASSWORD
-    }
-  });
 
   /**
    * @callback Users~callbackEmail
@@ -126,11 +120,14 @@ function Users(maxQueries, refreshRate) {
       from: author,
       to: process.env.EMAIL,
       subject: subject,
-      text: message + ' answer : ' + author,
+      text: message,
     }
-    this._transporter.sendMail(mailOptions, function(err, info) {
+
+    mailgun.messages().send(mailOptions, function(err, body) {
+      console.log(body);
       next(err);
-    });
+    })
+
   }
 
   this.updateQueries();
