@@ -1,5 +1,6 @@
 var express = require('express');
 var nodemailer = require('nodemailer');
+var cors = require('cors');
 var mailgun = require('mailgun-js')({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN});
 
 var router = express.Router();
@@ -134,6 +135,14 @@ function Users(maxQueries, refreshRate) {
 };
 
 var users = new Users(5, 24 * 60 * 50 * 1000);
+
+var corsOptions = {
+  origin: process.env.CLIENT_ADDRESS,
+  optionsSuccessStatus: 200
+}
+console.log('corsOptions', corsOptions);
+
+router.options(cors(corsOptions));
 
 router.post('/contact', function(req, res) {
   var ipAddress = req.ip;

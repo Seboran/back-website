@@ -4,7 +4,7 @@ var path = require('path');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var cors = require('cors');
+
 
 var usersRouter = require('./routes/users').router;
 
@@ -12,13 +12,7 @@ var app = express();
 
 // view engine setup
 
-var corsOptions = {
-  origin: process.env.CLIENT_ADDRESS,
-  optionsSuccessStatus: 200
-}
-console.log('corsOptions', corsOptions);
 
-app.options(cors(corsOptions));
 
 app.use(logger('dev'));
 app.use(bodyParser.json());
