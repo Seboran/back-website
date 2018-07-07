@@ -142,7 +142,7 @@ var corsOptions = {
 }
 console.log('corsOptions', corsOptions);
 
-router.options('/contact', cors());
+router.use(cors());
 
 router.post('/contact', cors(), function(req, res) {
   var ipAddress = req.ip;
