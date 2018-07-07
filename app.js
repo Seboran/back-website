@@ -18,7 +18,7 @@ var corsOptions = {
 }
 console.log('corsOptions', corsOptions);
 
-app.use(cors(corsOptions));
+app.options(cors(corsOptions));
 
 app.use(logger('dev'));
 app.use(bodyParser.json());
