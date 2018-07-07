@@ -16,6 +16,7 @@ var corsOptions = {
   origin: process.env.CLIENT_ADDRESS,
   optionsSuccessStatus: 200
 }
+console.log('corsOptions', corsOptions);
 
 app.use(cors(corsOptions));
 
